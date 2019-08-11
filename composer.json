@@ -1,0 +1,28 @@
+{
+  "name": "abdyfranco/pagalo",
+  "description": "Provides an easy-to-use class for generating payment requests using Pagalo.",
+  "license": "MIT",
+  "keywords": [
+    "payment",
+    "gateway",
+    "pagalo"
+  ],
+  "authors": [
+    {
+      "name": "Abdy Franco",
+      "email": "iam@abdyfran.co",
+      "homepage": "http://abdyfran.co"
+    }
+  ],
+  "require": {
+    "php": ">=5.6",
+    "ext-json": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Pagalo\\": "src/"
+    }
+  },
+  "prefer-stable": true,
+  "minimum-stability": "dev"
+}
