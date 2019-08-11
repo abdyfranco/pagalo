@@ -20,7 +20,9 @@ class NonMerchant
 
     private $password;
 
-    public function __construct($username, $password)
+    private $session_dir;
+
+    public function __construct($username, $password, $session_dir = null)
     {
         $this->username = $username;
         $this->password = $password;
@@ -30,6 +32,13 @@ class NonMerchant
 
         if (!$authentication) {
             throw new Error\Authentication('The given combination of username and password is incorrect');
+        }
+
+        // Set the session directory
+        if (is_null($session_dir)) {
+            $this->session_dir = dirname(__FILE__) . DIRECTORY_SEPARATOR;
+        } else {
+            $this->session_dir = $session_dir;
         }
     }
 
@@ -74,7 +83,7 @@ class NonMerchant
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 
         // Create and save the request cookie
-        $cookie = dirname(__FILE__) . DIRECTORY_SEPARATOR . md5($this->username) . '.txt';
+        $cookie = $this->session_dir . md5($this->username) . '.txt';
 
         curl_setopt($curl, CURLOPT_COOKIEJAR, $cookie);
         curl_setopt($curl, CURLOPT_COOKIEFILE, $cookie);
