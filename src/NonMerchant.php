@@ -27,18 +27,18 @@ class NonMerchant
         $this->username = $username;
         $this->password = $password;
 
+        // Set the session directory
+        if (is_null($session_dir)) {
+            $this->session_dir = dirname(__FILE__) . DIRECTORY_SEPARATOR;
+        } else {
+            $this->session_dir = rtrim($session_dir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+        }
+
         // Authenticate in to the Pagalo dashboard
         $authentication = $this->authenticate();
 
         if (!$authentication) {
             throw new Error\Authentication('The given combination of username and password is incorrect');
-        }
-
-        // Set the session directory
-        if (is_null($session_dir)) {
-            $this->session_dir = dirname(__FILE__) . DIRECTORY_SEPARATOR;
-        } else {
-            $this->session_dir = $session_dir;
         }
     }
 
@@ -103,16 +103,21 @@ class NonMerchant
 
         if (strpos($result, '_token') !== false) {
             $html = explode('name="_token" value="', $result, 2);
-
-            if (isset($html[1])) {
-                $html = explode('">', $html[1], 2);
-
-                return $html[0];
-            } else {
-                throw new Error\Authentication('An error occurred trying to get the authorization token');
-            }
+        } else if (strpos($result, 'csrf-token') !== false) {
+            $html = explode('name="csrf-token" content="', $result, 2);
         } else {
-            throw new Error\UnknownError('An error occurred trying to initialize the application');
+            // Logout from the application
+            $this->sendRequest('logout');
+
+            return $this->getToken();
+        }
+
+        if (isset($html[1])) {
+            $html = explode('">', $html[1], 2);
+
+            return $html[0];
+        } else {
+            throw new Error\Authentication('An error occurred trying to get the authorization token');
         }
 
         return null;
@@ -306,12 +311,14 @@ class NonMerchant
             'id_transaccion' => $transaction->id_transaccion,
             'id_empresa'     => $transaction->cliente->id_empresa,
             'carrito'        => [
-                'precio'      => number_format($amount, 2),
-                'sku'         => 'sku001',
-                'nombre'      => $description,
-                'id_producto' => 0,
-                'cantidad'    => 1,
-                'subtotal'    => number_format($amount, 2)
+                [
+                    'precio'      => number_format($amount, 2),
+                    'sku'         => 'sku001',
+                    'nombre'      => $description,
+                    'id_producto' => 0,
+                    'cantidad'    => 1,
+                    'subtotal'    => number_format($amount, 2)
+                ]
             ],
             'moneda'         => $currency,
             'tipoPago'       => 'CY'
