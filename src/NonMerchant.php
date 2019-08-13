@@ -103,7 +103,7 @@ class NonMerchant
 
         if (strpos($result, '_token') !== false) {
             $html = explode('name="_token" value="', $result, 2);
-        } else if (strpos($result, 'csrf-token') !== false) {
+        } elseif (strpos($result, 'csrf-token') !== false) {
             $html = explode('name="csrf-token" content="', $result, 2);
         } else {
             // Logout from the application
