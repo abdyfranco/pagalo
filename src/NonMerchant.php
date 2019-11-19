@@ -1,7 +1,7 @@
 <?php
 /**
- * Provides an easy-to-use class for generating payment requests using
- * Pagalo.
+ * Provides an easy-to-use class for generating non-merchant payment requests
+ * using Pagalo.
  *
  * @package    Pagalo
  * @subpackage Pagalo.NonMerchant
@@ -14,13 +14,13 @@ namespace Pagalo;
 
 class NonMerchant
 {
-    private $endpoint = 'https://app.pagalocard.com/';
+    protected $endpoint = 'https://app.pagalocard.com/';
 
-    private $username;
+    protected $username;
 
-    private $password;
+    protected $password;
 
-    private $session_dir;
+    protected $session_dir;
 
     public function __construct($username, $password, $session_dir = null)
     {
