@@ -192,7 +192,7 @@ class NonMerchant
         $company = $this->getCompany();
 
         // Build client parameters
-        $params  = [
+        $params = [
             'identidad_empresa' => $company->identidad_empresa,
             'id_empresa'        => $company->id,
             'nombre'            => null,
@@ -202,7 +202,7 @@ class NonMerchant
             'direccion'         => null,
             'pais'              => null,
             'state'             => null,
-            'postalcode'        => '00000',
+            'postalcode'        => '10000',
             'ciudad'            => null,
             'nit'               => 'C/F',
             'adicional'         => [
@@ -210,13 +210,36 @@ class NonMerchant
                 'descripcion' => []
             ]
         ];
-        $params  = array_merge($params, $client);
+        $params = array_merge($params, $client);
+
+        // Remove state parameter for all countries, except US and Canada
+        if ($params['pais'] !== 'US' && $params['pais'] !== 'CA') {
+            $params['state'] = null;
+        }
+
+        // Remove postal code parameter for Guatemala
+        if ($params['pais'] == 'GT') {
+            $params['postalcode'] = null;
+        }
+
+        // Force two-letter states, if the provided country is the US or Canada
+        if (($params['pais'] == 'US' || $params['pais'] == 'CA') && strlen($params['state']) > 2) {
+            $params['state'] = strtoupper(substr($params['state'], 0, 2));
+        }
+
+        // Send request
         $headers = [
             'Content-Type: application/json;charset=UTF-8'
         ];
         $result  = $this->sendRequest('api/mi/clientes/crear/' . $company->id, $params, 'POST', $headers);
 
-        return !empty($result);
+        // Get recently created client
+        $client = $this->searchClient($params['email']);
+
+        // Set client state and postal code
+        $this->sendRequest('api/mi/clientes/editar/' . $client->id, $params, 'POST', $headers);
+
+        return !empty($client);
     }
 
     public function searchClient($client_name)

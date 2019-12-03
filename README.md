@@ -1,4 +1,4 @@
-# Pagalo Non-Merchant PHP SDK
+# Pagalo Merchant PHP SDK
 Provides an easy-to-use class for generating payment requests using Pagalo.
 
 ```php
