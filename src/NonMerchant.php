@@ -74,6 +74,15 @@ class NonMerchant
             }
         }
 
+        // Build PUT request
+        if ($method == 'PUT') {
+            curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'PUT');
+
+            if (!empty($params)) {
+                curl_setopt($curl, CURLOPT_POSTFIELDS, $params);
+            }
+        }
+
         // Build URL
         $url = $this->endpoint . $function . (isset($get) ? $get : '');
 
@@ -95,6 +104,19 @@ class NonMerchant
         curl_close($curl);
 
         return $result;
+    }
+
+    private function authenticate()
+    {
+        $token  = $this->getToken();
+        $params = [
+            '_token'   => $token,
+            'email'    => $this->username,
+            'password' => $this->password
+        ];
+        $result = $this->sendRequest('login', $params, 'POST');
+
+        return strpos($result, 'http-equiv') !== false;
     }
 
     protected function getToken()
@@ -123,17 +145,36 @@ class NonMerchant
         return null;
     }
 
-    private function authenticate()
+    public function formatField($value)
     {
-        $token  = $this->getToken();
-        $params = [
-            '_token'   => $token,
-            'email'    => $this->username,
-            'password' => $this->password
+        $accents    = [
+            'À', 'Á', 'Â', 'Ã', 'Ä', 'Å', 'Æ', 'Ç', 'È', 'É', 'Ê', 'Ë', 'Ì', 'Í', 'Î', 'Ï', 'Ð', 'Ñ', 'Ò', 'Ó', 'Ô',
+            'Õ', 'Ö', 'Ø', 'Ù', 'Ú', 'Û', 'Ü', 'Ý', 'ß', 'à', 'á', 'â', 'ã', 'ä', 'å', 'æ', 'ç', 'è', 'é', 'ê', 'ë',
+            'ì', 'í', 'î', 'ï', 'ñ', 'ò', 'ó', 'ô', 'õ', 'ö', 'ø', 'ù', 'ú', 'û', 'ü', 'ý', 'ÿ', 'Ā', 'ā', 'Ă', 'ă',
+            'Ą', 'ą', 'Ć', 'ć', 'Ĉ', 'ĉ', 'Ċ', 'ċ', 'Č', 'č', 'Ď', 'ď', 'Đ', 'đ', 'Ē', 'ē', 'Ĕ', 'ĕ', 'Ė', 'ė', 'Ę',
+            'ę', 'Ě', 'ě', 'Ĝ', 'ĝ', 'Ğ', 'ğ', 'Ġ', 'ġ', 'Ģ', 'ģ', 'Ĥ', 'ĥ', 'Ħ', 'ħ', 'Ĩ', 'ĩ', 'Ī', 'ī', 'Ĭ', 'ĭ',
+            'Į', 'į', 'İ', 'ı', 'Ĳ', 'ĳ', 'Ĵ', 'ĵ', 'Ķ', 'ķ', 'Ĺ', 'ĺ', 'Ļ', 'ļ', 'Ľ', 'ľ', 'Ŀ', 'ŀ', 'Ł', 'ł', 'Ń',
+            'ń', 'Ņ', 'ņ', 'Ň', 'ň', 'ŉ', 'Ō', 'ō', 'Ŏ', 'ŏ', 'Ő', 'ő', 'Œ', 'œ', 'Ŕ', 'ŕ', 'Ŗ', 'ŗ', 'Ř', 'ř', 'Ś',
+            'ś', 'Ŝ', 'ŝ', 'Ş', 'ş', 'Š', 'š', 'Ţ', 'ţ', 'Ť', 'ť', 'Ŧ', 'ŧ', 'Ũ', 'ũ', 'Ū', 'ū', 'Ŭ', 'ŭ', 'Ů', 'ů',
+            'Ű', 'ű', 'Ų', 'ų', 'Ŵ', 'ŵ', 'Ŷ', 'ŷ', 'Ÿ', 'Ź', 'ź', 'Ż', 'ż', 'Ž', 'ž', 'ſ', 'ƒ', 'Ơ', 'ơ', 'Ư', 'ư',
+            'Ǎ', 'ǎ', 'Ǐ', 'ǐ', 'Ǒ', 'ǒ', 'Ǔ', 'ǔ', 'Ǖ', 'ǖ', 'Ǘ', 'ǘ', 'Ǚ', 'ǚ', 'Ǜ', 'ǜ', 'Ǻ', 'ǻ', 'Ǽ', 'ǽ', 'Ǿ',
+            'ǿ'
         ];
-        $result = $this->sendRequest('login', $params, 'POST');
+        $characters = [
+            'A', 'A', 'A', 'A', 'A', 'A', 'AE', 'C', 'E', 'E', 'E', 'E', 'I', 'I', 'I', 'I', 'D', 'N', 'O', 'O', 'O',
+            'O', 'O', 'O', 'U', 'U', 'U', 'U', 'Y', 's', 'a', 'a', 'a', 'a', 'a', 'a', 'ae', 'c', 'e', 'e', 'e', 'e',
+            'i', 'i', 'i', 'i', 'n', 'o', 'o', 'o', 'o', 'o', 'o', 'u', 'u', 'u', 'u', 'y', 'y', 'A', 'a', 'A', 'a',
+            'A', 'a', 'C', 'c', 'C', 'c', 'C', 'c', 'C', 'c', 'D', 'd', 'D', 'd', 'E', 'e', 'E', 'e', 'E', 'e', 'E',
+            'e', 'E', 'e', 'G', 'g', 'G', 'g', 'G', 'g', 'G', 'g', 'H', 'h', 'H', 'h', 'I', 'i', 'I', 'i', 'I', 'i',
+            'I', 'i', 'I', 'i', 'IJ', 'ij', 'J', 'j', 'K', 'k', 'L', 'l', 'L', 'l', 'L', 'l', 'L', 'l', 'l', 'l', 'N',
+            'n', 'N', 'n', 'N', 'n', 'n', 'O', 'o', 'O', 'o', 'O', 'o', 'OE', 'oe', 'R', 'r', 'R', 'r', 'R', 'r', 'S',
+            's', 'S', 's', 'S', 's', 'S', 's', 'T', 't', 'T', 't', 'T', 't', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u',
+            'U', 'u', 'U', 'u', 'W', 'w', 'Y', 'y', 'Y', 'Z', 'z', 'Z', 'z', 'Z', 'z', 's', 'f', 'O', 'o', 'U', 'u',
+            'A', 'a', 'I', 'i', 'O', 'o', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'A', 'a', 'AE', 'ae', 'O',
+            'o'
+        ];
 
-        return strpos($result, 'http-equiv') !== false;
+        return trim(str_replace($accents, $characters, $value));
     }
 
     public function getUser()
@@ -195,15 +236,15 @@ class NonMerchant
         $params = [
             'identidad_empresa' => $company->identidad_empresa,
             'id_empresa'        => $company->id,
-            'nombre'            => null,
-            'apellido'          => null,
-            'email'             => null,
-            'telefono'          => null,
-            'direccion'         => null,
-            'pais'              => null,
-            'state'             => null,
-            'postalcode'        => '10000',
-            'ciudad'            => null,
+            'nombre'            => '',
+            'apellido'          => '',
+            'email'             => '',
+            'telefono'          => '',
+            'direccion'         => '',
+            'pais'              => 'GT',
+            'state'             => 'GT',
+            'postalcode'        => '01001',
+            'ciudad'            => 'Guatemala',
             'nit'               => 'C/F',
             'adicional'         => [
                 'titulos'     => [],
@@ -214,12 +255,12 @@ class NonMerchant
 
         // Remove state parameter for all countries, except US and Canada
         if ($params['pais'] !== 'US' && $params['pais'] !== 'CA') {
-            $params['state'] = null;
+            $params['state'] = '';
         }
 
         // Remove postal code parameter for Guatemala
         if ($params['pais'] == 'GT') {
-            $params['postalcode'] = null;
+            $params['postalcode'] = '';
         }
 
         // Force two-letter states, if the provided country is the US or Canada
@@ -227,17 +268,25 @@ class NonMerchant
             $params['state'] = strtoupper(substr($params['state'], 0, 2));
         }
 
+        // Format client name and address
+        $params['nombre']    = $this->formatField($params['nombre']);
+        $params['apellido']  = $this->formatField($params['apellido']);
+        $params['direccion'] = $this->formatField($params['direccion']);
+        $params['ciudad']    = $this->formatField($params['ciudad']);
+
         // Send request
-        $headers = [
+        $this->sendRequest('api/mi/clientes/crear/' . $company->id, $params, 'POST', [
             'Content-Type: application/json;charset=UTF-8'
-        ];
-        $result  = $this->sendRequest('api/mi/clientes/crear/' . $company->id, $params, 'POST', $headers);
+        ]);
 
         // Get recently created client
-        $client = $this->searchClient($params['email']);
+        unset($params['identidad_empresa']);
+        unset($params['id_empresa']);
 
-        // Set client state and postal code
-        $this->sendRequest('api/mi/clientes/editar/' . $client->id, $params, 'POST', $headers);
+        $client = $this->searchClient($params['email']);
+        $this->sendRequest('api/mi/clientes/editar/' . $client[0]->id, $params, 'PUT', [
+            'Content-Type: application/json;charset=UTF-8'
+        ]);
 
         return !empty($client);
     }
@@ -247,10 +296,9 @@ class NonMerchant
         $params  = [
             'busqueda' => trim($client_name)
         ];
-        $headers = [
+        $result  = $this->sendRequest('api/miV2/searchClient', $params, 'POST', [
             'Content-Type: application/json;charset=UTF-8'
-        ];
-        $result  = $this->sendRequest('api/miV2/searchClient', $params, 'POST', $headers);
+        ]);
         $result  = json_decode($result);
 
         return isset($result->datos) ? $result->datos : null;
@@ -274,10 +322,9 @@ class NonMerchant
             'dato'     => trim($product_name),
             'busqueda' => trim($product_name),
         ];
-        $headers = [
+        $result  = $this->sendRequest('api/miV2/searchClient', $params, 'POST', [
             'Content-Type: application/json;charset=UTF-8'
-        ];
-        $result  = $this->sendRequest('api/miV2/searchClient', $params, 'POST', $headers);
+        ]);
         $result  = json_decode($result);
 
         return isset($result->datos) ? $result->datos : null;
@@ -323,10 +370,9 @@ class NonMerchant
 
         // Assign the client to the transaction
         $params      = (array) $client;
-        $headers     = [
+        $transaction = $this->sendRequest('api/miV2/asignarClient', $params, 'POST', [
             'Content-Type: application/json;charset=UTF-8'
-        ];
-        $transaction = $this->sendRequest('api/miV2/asignarClient', $params, 'POST', $headers);
+        ]);
         $transaction = json_decode($transaction);
 
         // Build the payment
@@ -346,7 +392,9 @@ class NonMerchant
             'moneda'         => $currency,
             'tipoPago'       => 'CY'
         ];
-        $payment = $this->sendRequest('api/miV2/solicitud/enviarsolicitudl', $params, 'POST', $headers);
+        $payment = $this->sendRequest('api/miV2/solicitud/enviarsolicitudl', $params, 'POST', [
+            'Content-Type: application/json;charset=UTF-8'
+        ]);
         $payment = json_decode($payment);
 
         // Build response
