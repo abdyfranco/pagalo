@@ -11,8 +11,6 @@
 
 namespace Pagalo\Error;
 
-use Exception;
-
-class UnknownError extends Exception
+class UnknownError extends \Pagalo\Exception
 {
 }

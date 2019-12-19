@@ -4,16 +4,16 @@ Provides an easy-to-use class for generating payment requests using Pagalo.
 ```php
 <?php
 
-use Pagalo\NonMerchant;
+use Pagalo\Module\Payments;
 
-$NonMerchant = new NonMerchant('username', 'password');
+$Payments = new Payments('username', 'password');
 
 $client_id = '1000';
 $description = 'Invoice #1234';
 $amount = 100;
 $currency = 'USD';
 
-$request = $NonMerchant->requestPayment($client_id, $description, $amount, $currency);
+$request = $NonMerchant->request($client_id, $description, $amount, $currency);
 ```
 
 ## Requirements

@@ -1,18 +1,17 @@
 <?php
 /**
- * Provides an easy-to-use class for generating merchant payment requests
- * using Pagalo.
+ * Payments module.
  *
  * @package    Pagalo
- * @subpackage Pagalo.NonMerchant
+ * @subpackage Pagalo.Module.Payments
  * @copyright  Copyright (c) 2018-2019 Abdy Franco. All Rights Reserved.
  * @license    https://opensource.org/licenses/MIT The MIT License (MIT)
  * @author     Abdy Franco <iam@abdyfran.co>
  */
 
-namespace Pagalo;
+namespace Pagalo\Module;
 
-class Merchant extends NonMerchant
+class Payments extends \Pagalo\Pagalo
 {
     private $merchant_id = 'visanetgt_jupiter';
 
@@ -77,29 +76,91 @@ class Merchant extends NonMerchant
         return $session_id;
     }
 
-    public function createToken($cc_number, $cc_name, $cc_exp, $cc_cvv)
+    public function getAll()
     {
-        $cc_exp = explode('/', $cc_exp, 2);
-        $token  = [
-            'accountNumber'   => $cc_number,
-            'nameCard'        => $cc_name,
-            'expirationMonth' => $cc_exp[0],
-            'expirationYear'  => $cc_exp[1],
-            'cvNumber'        => $cc_cvv
-        ];
+        // Get company details
+        $company = $this->getCompany();
 
-        return base64_encode(json_encode($token));
+        // Get company clients
+        $result = $this->sendRequest('api/mi/solicitud/solicitudes/' . $company->id);
+        $result = json_decode($result);
+
+        return isset($result->datos) ? $result->datos : null;
     }
 
-    public function decodeToken($token)
+    public function get($transaction_id)
     {
-        return (array) json_decode(base64_decode($token));
+        // Get all company payments
+        $payments = $this->getAll();
+
+        // Search the required payment
+        foreach ($payments as $payment) {
+            if ($payment->id_transaccion == $transaction_id) {
+                return $payment;
+            }
+        }
+
+        return null;
     }
 
-    public function processPayment($client_id, $token, $description, $amount, $currency = 'USD')
+    public function request($client_id, $description, $amount, $currency = 'USD')
     {
         // Get client
-        $client              = $this->getClient($client_id);
+        $Clients = new Clients($this->username, $this->password, $this->session_dir);
+        $client  = $Clients->get($client_id);
+
+        $client->id_cliente  = $client_id;
+        $client->tipoTransac = 'S';
+
+        // Remove unnecessary client properties
+        unset($client->empresa);
+        unset($client->adicional);
+
+        // Assign the client to the transaction
+        $params      = (array) $client;
+        $transaction = $this->sendRequest('api/miV2/asignarClient', $params, 'POST', [
+            'Content-Type: application/json;charset=UTF-8'
+        ]);
+        $transaction = json_decode($transaction);
+
+        // Build the payment
+        $params  = [
+            'id_transaccion' => $transaction->id_transaccion,
+            'id_empresa'     => $transaction->cliente->id_empresa,
+            'carrito'        => [
+                [
+                    'precio'      => number_format($amount, 2),
+                    'sku'         => 'sku001',
+                    'nombre'      => $description,
+                    'id_producto' => 0,
+                    'cantidad'    => 1,
+                    'subtotal'    => number_format($amount, 2)
+                ]
+            ],
+            'moneda'         => $currency,
+            'tipoPago'       => 'CY'
+        ];
+        $payment = $this->sendRequest('api/miV2/solicitud/enviarsolicitudl', $params, 'POST', [
+            'Content-Type: application/json;charset=UTF-8'
+        ]);
+        $payment = json_decode($payment);
+
+        // Build response
+        $response = null;
+
+        if (isset($payment->url)) {
+            $response = (object) array_merge((array) $transaction, (array) $payment);
+        }
+
+        return $response;
+    }
+
+    public function process($client_id, \Pagalo\Object\Card $card, $description, $amount, $currency = 'USD')
+    {
+        // Get client
+        $Clients = new Clients($this->username, $this->password, $this->session_dir);
+        $client  = $Clients->get($client_id);
+
         $client->id_cliente  = $client_id;
         $client->tipoTransac = 'S';
 
@@ -119,7 +180,7 @@ class Merchant extends NonMerchant
         $this->sendRequest('api/mi/totalVentasComercio');
 
         // Decode the credit card token
-        $credit_card = $this->decodeToken($token);
+        $credit_card = $card->getCardArray();
 
         // Get device fingerprint
         $fingerprint = $this->getDeviceFingerprint();
