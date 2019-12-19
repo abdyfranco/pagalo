@@ -11,8 +11,6 @@
 
 namespace Pagalo\Error;
 
-use Exception;
-
 class Authentication extends \Pagalo\Exception
 {
 }

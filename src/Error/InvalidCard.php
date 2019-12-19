@@ -11,8 +11,6 @@
 
 namespace Pagalo\Error;
 
-use Exception;
-
 class InvalidCard extends \Pagalo\Exception
 {
 }

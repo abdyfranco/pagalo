@@ -13,5 +13,4 @@ namespace Pagalo;
 
 class Exception extends \Exception
 {
-
 }
