@@ -4,7 +4,7 @@
  *
  * @package    Pagalo
  * @subpackage Pagalo.Object.Card
- * @copyright  Copyright (c) 2018-2019 Abdy Franco. All Rights Reserved.
+ * @copyright  Copyright (c) 2018-2020 Abdy Franco. All Rights Reserved.
  * @license    https://opensource.org/licenses/MIT The MIT License (MIT)
  * @author     Abdy Franco <iam@abdyfran.co>
  */

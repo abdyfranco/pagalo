@@ -13,7 +13,7 @@ $description = 'Invoice #1234';
 $amount = 100;
 $currency = 'USD';
 
-$request = $NonMerchant->request($client_id, $description, $amount, $currency);
+$request = $Payments->request($client_id, $description, $amount, $currency);
 ```
 
 ## Requirements
