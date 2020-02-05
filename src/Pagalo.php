@@ -12,17 +12,40 @@
 
 namespace Pagalo;
 
+use stdClass;
+
 class Pagalo
 {
+    /**
+     * @var string The Pagalo app endpoint.
+     */
     protected $endpoint = 'https://app.pagalocard.com/';
 
+    /**
+     * @var string The Pagalo username.
+     */
     protected $username;
 
+    /**
+     * @var string The Pagalo password.
+     */
     protected $password;
 
+    /**
+     * @var string The session directory.
+     */
     protected $session_dir;
 
-    public function __construct($username, $password, $session_dir = null)
+    /**
+     * Pagalo constructor.
+     *
+     * @param string      $username The Pagalo username.
+     * @param string      $password The Pagalo password.
+     * @param string|null $session_dir The session directory.
+     *
+     * @throws \Pagalo\Error\Authentication
+     */
+    public function __construct(string $username, string $password, string $session_dir = null)
     {
         $this->username = $username;
         $this->password = $password;
@@ -42,7 +65,18 @@ class Pagalo
         }
     }
 
-    public function sendRequest($function, array $params = [], $method = 'GET', array $headers = [])
+    /**
+     * Makes a request to the API.
+     *
+     * @param string $function The function of the API to be called.
+     * @param array  $params An array with the parameters that will be passed to the function called.
+     * @param string $method The HTTP method to be used for the request.
+     * @param array  $headers The headers to be sent in the HTTP request.
+     * @param bool   $raw True to return the RAW response, false to return the parsed response.
+     *
+     * @return mixed An object containing the response of the API request or the RAW response.
+     */
+    public function sendRequest(string $function, array $params = [], string $method = 'GET', array $headers = [], bool $raw = false)
     {
         $curl = curl_init();
 
@@ -100,13 +134,23 @@ class Pagalo
         // Get result
         $result = curl_exec($curl);
 
+        if (!$raw) {
+            $result = json_decode($result);
+        }
+
         // Close request
         curl_close($curl);
 
         return $result;
     }
 
-    private function authenticate()
+    /**
+     * Authenticate API user.
+     *
+     * @return bool True if the user has successfully authenticated, otherwise false.
+     * @throws \Pagalo\Error\Authentication
+     */
+    private function authenticate() : bool
     {
         $token  = $this->getToken();
         $params = [
@@ -114,25 +158,32 @@ class Pagalo
             'email'    => $this->username,
             'password' => $this->password
         ];
-        $result = $this->sendRequest('login', $params, 'POST');
+        $result = $this->sendRequest('login', $params, 'POST', [], true);
 
         return strpos($result, 'http-equiv') !== false;
     }
 
-    public function getToken()
+    /**
+     * Get the authentication token.
+     *
+     * @return string The authentication token.
+     * @throws \Pagalo\Error\Authentication
+     */
+    public function getToken() : string
     {
-        $result = $this->sendRequest('login');
+        $result = $this->sendRequest('login', [], 'GET', [], true);
 
         if (strpos($result, '_token') !== false) {
             $html = explode('name="_token" value="', $result, 2);
-        } elseif (strpos($result, 'csrf-token') !== false) {
+        } else if (strpos($result, 'csrf-token') !== false) {
             $html = explode('name="csrf-token" content="', $result, 2);
         } else {
             // Logout from the application
-            $this->sendRequest('logout');
+            $this->sendRequest('logout', [], 'GET', [], true);
 
             return $this->getToken();
         }
+
 
         if (isset($html[1])) {
             $html = explode('">', $html[1], 2);
@@ -141,61 +192,483 @@ class Pagalo
         } else {
             throw new Error\Authentication('An error occurred trying to get the authorization token');
         }
-
-        return null;
     }
 
-    public function formatField($value)
+    /**
+     * It formats a string, replacing all special characters.
+     *
+     * @param string $value The string to be formatted.
+     *
+     * @return string The formatted string.
+     */
+    public function formatField(string $value) : string
     {
         $accents    = [
-            'À', 'Á', 'Â', 'Ã', 'Ä', 'Å', 'Æ', 'Ç', 'È', 'É', 'Ê', 'Ë', 'Ì', 'Í', 'Î', 'Ï', 'Ð', 'Ñ', 'Ò', 'Ó', 'Ô',
-            'Õ', 'Ö', 'Ø', 'Ù', 'Ú', 'Û', 'Ü', 'Ý', 'ß', 'à', 'á', 'â', 'ã', 'ä', 'å', 'æ', 'ç', 'è', 'é', 'ê', 'ë',
-            'ì', 'í', 'î', 'ï', 'ñ', 'ò', 'ó', 'ô', 'õ', 'ö', 'ø', 'ù', 'ú', 'û', 'ü', 'ý', 'ÿ', 'Ā', 'ā', 'Ă', 'ă',
-            'Ą', 'ą', 'Ć', 'ć', 'Ĉ', 'ĉ', 'Ċ', 'ċ', 'Č', 'č', 'Ď', 'ď', 'Đ', 'đ', 'Ē', 'ē', 'Ĕ', 'ĕ', 'Ė', 'ė', 'Ę',
-            'ę', 'Ě', 'ě', 'Ĝ', 'ĝ', 'Ğ', 'ğ', 'Ġ', 'ġ', 'Ģ', 'ģ', 'Ĥ', 'ĥ', 'Ħ', 'ħ', 'Ĩ', 'ĩ', 'Ī', 'ī', 'Ĭ', 'ĭ',
-            'Į', 'į', 'İ', 'ı', 'Ĳ', 'ĳ', 'Ĵ', 'ĵ', 'Ķ', 'ķ', 'Ĺ', 'ĺ', 'Ļ', 'ļ', 'Ľ', 'ľ', 'Ŀ', 'ŀ', 'Ł', 'ł', 'Ń',
-            'ń', 'Ņ', 'ņ', 'Ň', 'ň', 'ŉ', 'Ō', 'ō', 'Ŏ', 'ŏ', 'Ő', 'ő', 'Œ', 'œ', 'Ŕ', 'ŕ', 'Ŗ', 'ŗ', 'Ř', 'ř', 'Ś',
-            'ś', 'Ŝ', 'ŝ', 'Ş', 'ş', 'Š', 'š', 'Ţ', 'ţ', 'Ť', 'ť', 'Ŧ', 'ŧ', 'Ũ', 'ũ', 'Ū', 'ū', 'Ŭ', 'ŭ', 'Ů', 'ů',
-            'Ű', 'ű', 'Ų', 'ų', 'Ŵ', 'ŵ', 'Ŷ', 'ŷ', 'Ÿ', 'Ź', 'ź', 'Ż', 'ż', 'Ž', 'ž', 'ſ', 'ƒ', 'Ơ', 'ơ', 'Ư', 'ư',
-            'Ǎ', 'ǎ', 'Ǐ', 'ǐ', 'Ǒ', 'ǒ', 'Ǔ', 'ǔ', 'Ǖ', 'ǖ', 'Ǘ', 'ǘ', 'Ǚ', 'ǚ', 'Ǜ', 'ǜ', 'Ǻ', 'ǻ', 'Ǽ', 'ǽ', 'Ǿ',
-            'ǿ', '#'
+            'À',
+            'Á',
+            'Â',
+            'Ã',
+            'Ä',
+            'Å',
+            'Æ',
+            'Ç',
+            'È',
+            'É',
+            'Ê',
+            'Ë',
+            'Ì',
+            'Í',
+            'Î',
+            'Ï',
+            'Ð',
+            'Ñ',
+            'Ò',
+            'Ó',
+            'Ô',
+            'Õ',
+            'Ö',
+            'Ø',
+            'Ù',
+            'Ú',
+            'Û',
+            'Ü',
+            'Ý',
+            'ß',
+            'à',
+            'á',
+            'â',
+            'ã',
+            'ä',
+            'å',
+            'æ',
+            'ç',
+            'è',
+            'é',
+            'ê',
+            'ë',
+            'ì',
+            'í',
+            'î',
+            'ï',
+            'ñ',
+            'ò',
+            'ó',
+            'ô',
+            'õ',
+            'ö',
+            'ø',
+            'ù',
+            'ú',
+            'û',
+            'ü',
+            'ý',
+            'ÿ',
+            'Ā',
+            'ā',
+            'Ă',
+            'ă',
+            'Ą',
+            'ą',
+            'Ć',
+            'ć',
+            'Ĉ',
+            'ĉ',
+            'Ċ',
+            'ċ',
+            'Č',
+            'č',
+            'Ď',
+            'ď',
+            'Đ',
+            'đ',
+            'Ē',
+            'ē',
+            'Ĕ',
+            'ĕ',
+            'Ė',
+            'ė',
+            'Ę',
+            'ę',
+            'Ě',
+            'ě',
+            'Ĝ',
+            'ĝ',
+            'Ğ',
+            'ğ',
+            'Ġ',
+            'ġ',
+            'Ģ',
+            'ģ',
+            'Ĥ',
+            'ĥ',
+            'Ħ',
+            'ħ',
+            'Ĩ',
+            'ĩ',
+            'Ī',
+            'ī',
+            'Ĭ',
+            'ĭ',
+            'Į',
+            'į',
+            'İ',
+            'ı',
+            'Ĳ',
+            'ĳ',
+            'Ĵ',
+            'ĵ',
+            'Ķ',
+            'ķ',
+            'Ĺ',
+            'ĺ',
+            'Ļ',
+            'ļ',
+            'Ľ',
+            'ľ',
+            'Ŀ',
+            'ŀ',
+            'Ł',
+            'ł',
+            'Ń',
+            'ń',
+            'Ņ',
+            'ņ',
+            'Ň',
+            'ň',
+            'ŉ',
+            'Ō',
+            'ō',
+            'Ŏ',
+            'ŏ',
+            'Ő',
+            'ő',
+            'Œ',
+            'œ',
+            'Ŕ',
+            'ŕ',
+            'Ŗ',
+            'ŗ',
+            'Ř',
+            'ř',
+            'Ś',
+            'ś',
+            'Ŝ',
+            'ŝ',
+            'Ş',
+            'ş',
+            'Š',
+            'š',
+            'Ţ',
+            'ţ',
+            'Ť',
+            'ť',
+            'Ŧ',
+            'ŧ',
+            'Ũ',
+            'ũ',
+            'Ū',
+            'ū',
+            'Ŭ',
+            'ŭ',
+            'Ů',
+            'ů',
+            'Ű',
+            'ű',
+            'Ų',
+            'ų',
+            'Ŵ',
+            'ŵ',
+            'Ŷ',
+            'ŷ',
+            'Ÿ',
+            'Ź',
+            'ź',
+            'Ż',
+            'ż',
+            'Ž',
+            'ž',
+            'ſ',
+            'ƒ',
+            'Ơ',
+            'ơ',
+            'Ư',
+            'ư',
+            'Ǎ',
+            'ǎ',
+            'Ǐ',
+            'ǐ',
+            'Ǒ',
+            'ǒ',
+            'Ǔ',
+            'ǔ',
+            'Ǖ',
+            'ǖ',
+            'Ǘ',
+            'ǘ',
+            'Ǚ',
+            'ǚ',
+            'Ǜ',
+            'ǜ',
+            'Ǻ',
+            'ǻ',
+            'Ǽ',
+            'ǽ',
+            'Ǿ',
+            'ǿ',
+            '#'
         ];
         $characters = [
-            'A', 'A', 'A', 'A', 'A', 'A', 'AE', 'C', 'E', 'E', 'E', 'E', 'I', 'I', 'I', 'I', 'D', 'N', 'O', 'O', 'O',
-            'O', 'O', 'O', 'U', 'U', 'U', 'U', 'Y', 's', 'a', 'a', 'a', 'a', 'a', 'a', 'ae', 'c', 'e', 'e', 'e', 'e',
-            'i', 'i', 'i', 'i', 'n', 'o', 'o', 'o', 'o', 'o', 'o', 'u', 'u', 'u', 'u', 'y', 'y', 'A', 'a', 'A', 'a',
-            'A', 'a', 'C', 'c', 'C', 'c', 'C', 'c', 'C', 'c', 'D', 'd', 'D', 'd', 'E', 'e', 'E', 'e', 'E', 'e', 'E',
-            'e', 'E', 'e', 'G', 'g', 'G', 'g', 'G', 'g', 'G', 'g', 'H', 'h', 'H', 'h', 'I', 'i', 'I', 'i', 'I', 'i',
-            'I', 'i', 'I', 'i', 'IJ', 'ij', 'J', 'j', 'K', 'k', 'L', 'l', 'L', 'l', 'L', 'l', 'L', 'l', 'l', 'l', 'N',
-            'n', 'N', 'n', 'N', 'n', 'n', 'O', 'o', 'O', 'o', 'O', 'o', 'OE', 'oe', 'R', 'r', 'R', 'r', 'R', 'r', 'S',
-            's', 'S', 's', 'S', 's', 'S', 's', 'T', 't', 'T', 't', 'T', 't', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u',
-            'U', 'u', 'U', 'u', 'W', 'w', 'Y', 'y', 'Y', 'Z', 'z', 'Z', 'z', 'Z', 'z', 's', 'f', 'O', 'o', 'U', 'u',
-            'A', 'a', 'I', 'i', 'O', 'o', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'A', 'a', 'AE', 'ae', 'O',
-            'o', 'No.'
+            'A',
+            'A',
+            'A',
+            'A',
+            'A',
+            'A',
+            'AE',
+            'C',
+            'E',
+            'E',
+            'E',
+            'E',
+            'I',
+            'I',
+            'I',
+            'I',
+            'D',
+            'N',
+            'O',
+            'O',
+            'O',
+            'O',
+            'O',
+            'O',
+            'U',
+            'U',
+            'U',
+            'U',
+            'Y',
+            's',
+            'a',
+            'a',
+            'a',
+            'a',
+            'a',
+            'a',
+            'ae',
+            'c',
+            'e',
+            'e',
+            'e',
+            'e',
+            'i',
+            'i',
+            'i',
+            'i',
+            'n',
+            'o',
+            'o',
+            'o',
+            'o',
+            'o',
+            'o',
+            'u',
+            'u',
+            'u',
+            'u',
+            'y',
+            'y',
+            'A',
+            'a',
+            'A',
+            'a',
+            'A',
+            'a',
+            'C',
+            'c',
+            'C',
+            'c',
+            'C',
+            'c',
+            'C',
+            'c',
+            'D',
+            'd',
+            'D',
+            'd',
+            'E',
+            'e',
+            'E',
+            'e',
+            'E',
+            'e',
+            'E',
+            'e',
+            'E',
+            'e',
+            'G',
+            'g',
+            'G',
+            'g',
+            'G',
+            'g',
+            'G',
+            'g',
+            'H',
+            'h',
+            'H',
+            'h',
+            'I',
+            'i',
+            'I',
+            'i',
+            'I',
+            'i',
+            'I',
+            'i',
+            'I',
+            'i',
+            'IJ',
+            'ij',
+            'J',
+            'j',
+            'K',
+            'k',
+            'L',
+            'l',
+            'L',
+            'l',
+            'L',
+            'l',
+            'L',
+            'l',
+            'l',
+            'l',
+            'N',
+            'n',
+            'N',
+            'n',
+            'N',
+            'n',
+            'n',
+            'O',
+            'o',
+            'O',
+            'o',
+            'O',
+            'o',
+            'OE',
+            'oe',
+            'R',
+            'r',
+            'R',
+            'r',
+            'R',
+            'r',
+            'S',
+            's',
+            'S',
+            's',
+            'S',
+            's',
+            'S',
+            's',
+            'T',
+            't',
+            'T',
+            't',
+            'T',
+            't',
+            'U',
+            'u',
+            'U',
+            'u',
+            'U',
+            'u',
+            'U',
+            'u',
+            'U',
+            'u',
+            'U',
+            'u',
+            'W',
+            'w',
+            'Y',
+            'y',
+            'Y',
+            'Z',
+            'z',
+            'Z',
+            'z',
+            'Z',
+            'z',
+            's',
+            'f',
+            'O',
+            'o',
+            'U',
+            'u',
+            'A',
+            'a',
+            'I',
+            'i',
+            'O',
+            'o',
+            'U',
+            'u',
+            'U',
+            'u',
+            'U',
+            'u',
+            'U',
+            'u',
+            'U',
+            'u',
+            'A',
+            'a',
+            'AE',
+            'ae',
+            'O',
+            'o',
+            'No.'
         ];
 
         return trim(str_replace($accents, $characters, $value));
     }
 
-    public function getUser()
+    /**
+     * It obtains the data of the user from whom the API is connected.
+     *
+     * @return null|\stdClass Returns an object which contains the data of the current user, such as the ID, Mail,
+     *     Name, etc...
+     */
+    public function getUser() : ?stdClass
     {
         $result = $this->sendRequest('api/miV2/myUser');
-        $result = json_decode($result);
 
         return isset($result->datos) ? $result->datos : null;
     }
 
-    public function getCompany()
+    /**
+     * Get the company data.
+     *
+     * @return null|\stdClass An object containing all the related data of the company, such as Bank Accounts, Legal
+     *     Representative, etc...
+     */
+    public function getCompany() : ?stdClass
     {
         $user = $this->getUser();
 
-        return $user->empresa;
+        return isset($user->empresa) ? $user->empresa : null;
     }
 
-    public function getPlan()
+    /**
+     * Get the current subscription plan.
+     *
+     * @return null|\stdClass An object containing the current subscription plan.
+     */
+    public function getPlan() : ?stdClass
     {
         $result = $this->sendRequest('api/mi/configuracionPlan');
-        $result = json_decode($result);
 
         return isset($result->datos) ? $result->datos : null;
     }

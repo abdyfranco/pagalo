@@ -13,11 +13,15 @@ namespace Pagalo\Module;
 
 class Payouts extends \Pagalo\Pagalo
 {
-    public function getAll()
+    /**
+     * Get all the payouts.
+     *
+     * @return array An array containing all the payouts.
+     */
+    public function getAll() : ?array
     {
         $result = $this->sendRequest('api/mi/liquidaciones');
-        $result = json_decode($result);
 
-        return isset($result->datos) ? $result->datos : null;
+        return (array) isset($result->datos) ? $result->datos : null;
     }
 }

@@ -11,13 +11,28 @@
 
 namespace Pagalo\Module;
 
+use stdClass;
+
 class Payments extends \Pagalo\Pagalo
 {
+    /**
+     * @var string The merchant ID.
+     */
     private $merchant_id = 'visanetgt_jupiter';
 
+    /**
+     * @var string The organization ID.
+     */
     private $organization_id = 'k8vif92e';
 
-    private function collectData($endpoint)
+    /**
+     * Collect CyberSource data.
+     *
+     * @param string $endpoint The endpoint to call for data collection.
+     *
+     * @return string The result of the data collection.
+     */
+    private function collectData(string $endpoint) : string
     {
         $curl = curl_init();
 
@@ -38,7 +53,11 @@ class Payments extends \Pagalo\Pagalo
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($curl, CURLOPT_USERAGENT, 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0.2 Safari/605.1.15');
+        curl_setopt(
+            $curl,
+            CURLOPT_USERAGENT,
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0.2 Safari/605.1.15'
+        );
         curl_setopt($curl, CURLOPT_ENCODING, 'gzip, deflate');
 
         // Create and save the request cookie
@@ -53,13 +72,18 @@ class Payments extends \Pagalo\Pagalo
         // Close request
         curl_close($curl);
 
-        return $result;
+        return (string) $result;
     }
 
-    private function getDeviceFingerprint()
+    /**
+     * Generate device fingerprint.
+     *
+     * @return int The session ID.
+     */
+    private function getDeviceFingerprint() : int
     {
         // Set session ID
-        $session_id = round(microtime(true) * 1000);
+        $session_id = (int) round(microtime(true) * 1000);
 
         // Data collection endpoints
         $data_collect = [
@@ -76,19 +100,30 @@ class Payments extends \Pagalo\Pagalo
         return $session_id;
     }
 
-    public function getAll()
+    /**
+     * Get all payment requests.
+     *
+     * @return array An array containing all the payment requests.
+     */
+    public function getAll() : array
     {
         // Get company details
         $company = $this->getCompany();
 
         // Get company clients
         $result = $this->sendRequest('api/mi/solicitud/solicitudes/' . $company->id);
-        $result = json_decode($result);
 
-        return isset($result->datos) ? $result->datos : null;
+        return (array) isset($result->datos) ? $result->datos : null;
     }
 
-    public function get($transaction_id)
+    /**
+     * Get a payment.
+     *
+     * @param int $transaction_id The transaction ID.
+     *
+     * @return null|\stdClass An object containing the payment information.
+     */
+    public function get(int $transaction_id) : ?stdClass
     {
         // Get all company payments
         $payments = $this->getAll();
@@ -103,7 +138,18 @@ class Payments extends \Pagalo\Pagalo
         return null;
     }
 
-    public function request($client_id, $description, $amount, $currency = 'USD')
+    /**
+     * Make a payment request.
+     *
+     * @param int    $client_id The client ID.
+     * @param string $description The description of the payment request.
+     * @param float  $amount The amount of the payment request.
+     * @param string $currency The currency of the payment request (USD or GTQ).
+     *
+     * @return null|\stdClass An object containing the payment request.
+     * @throws \Pagalo\Error\Authentication
+     */
+    public function request(int $client_id, string $description, float $amount, string $currency = 'USD') : ?stdClass
     {
         // Get client
         $Clients = new Clients($this->username, $this->password, $this->session_dir);
@@ -118,10 +164,14 @@ class Payments extends \Pagalo\Pagalo
 
         // Assign the client to the transaction
         $params      = (array) $client;
-        $transaction = $this->sendRequest('api/miV2/asignarClient', $params, 'POST', [
-            'Content-Type: application/json;charset=UTF-8'
-        ]);
-        $transaction = json_decode($transaction);
+        $transaction = $this->sendRequest(
+            'api/miV2/asignarClient',
+            $params,
+            'POST',
+            [
+                'Content-Type: application/json;charset=UTF-8'
+            ]
+        );
 
         // Build the payment
         $params  = [
@@ -140,10 +190,14 @@ class Payments extends \Pagalo\Pagalo
             'moneda'         => $currency,
             'tipoPago'       => 'CY'
         ];
-        $payment = $this->sendRequest('api/miV2/solicitud/enviarsolicitudl', $params, 'POST', [
-            'Content-Type: application/json;charset=UTF-8'
-        ]);
-        $payment = json_decode($payment);
+        $payment = $this->sendRequest(
+            'api/miV2/solicitud/enviarsolicitudl',
+            $params,
+            'POST',
+            [
+                'Content-Type: application/json;charset=UTF-8'
+            ]
+        );
 
         // Build response
         $response = null;
@@ -155,7 +209,19 @@ class Payments extends \Pagalo\Pagalo
         return $response;
     }
 
-    public function process($client_id, \Pagalo\Object\Card $card, $description, $amount, $currency = 'USD')
+    /**
+     * Charge a credit card.
+     *
+     * @param int                 $client_id The client ID.
+     * @param \Pagalo\Object\Card $card The Card object to charge.
+     * @param string              $description The description of the payment request.
+     * @param float               $amount The amount of the payment request.
+     * @param string              $currency The currency of the payment request (USD or GTQ).
+     *
+     * @return null|\stdClass An object containing the payment request.
+     * @throws \Pagalo\Error\Authentication
+     */
+    public function process(int $client_id, \Pagalo\Object\Card $card, string $description, float $amount, string $currency = 'USD') : ?stdClass
     {
         // Get client
         $Clients = new Clients($this->username, $this->password, $this->session_dir);
@@ -174,7 +240,6 @@ class Payments extends \Pagalo\Pagalo
             'Content-Type: application/json;charset=UTF-8'
         ];
         $transaction = $this->sendRequest('api/miV2/asignarClient', $params, 'POST', $headers);
-        $transaction = json_decode($transaction);
 
         // Initialize the transaction
         $this->sendRequest('api/mi/totalVentasComercio');
@@ -204,8 +269,12 @@ class Payments extends \Pagalo\Pagalo
             ]
         ];
         $params  = array_merge($params, $credit_card);
-        $payment = $this->sendRequest('api/miV2/enviarventa/' . $transaction->id_transaccion, $params, 'POST', $headers);
-        $payment = json_decode($payment);
+        $payment = $this->sendRequest(
+            'api/miV2/enviarventa/' . $transaction->id_transaccion,
+            $params,
+            'POST',
+            $headers
+        );
 
         // Build response
         $response = null;

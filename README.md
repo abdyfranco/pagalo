@@ -17,7 +17,7 @@ $request = $Payments->request($client_id, $description, $amount, $currency);
 ```
 
 ## Requirements
-PHP 5.6+. Other than that, this library has no external requirements.
+PHP 7.1+. Other than that, this library has no external requirements.
 
 ## Installation
 You can install this library via Composer.
