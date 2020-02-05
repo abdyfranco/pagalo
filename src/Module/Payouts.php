@@ -11,6 +11,8 @@
 
 namespace Pagalo\Module;
 
+use stdClass;
+
 class Payouts extends \Pagalo\Pagalo
 {
     /**
@@ -23,5 +25,27 @@ class Payouts extends \Pagalo\Pagalo
         $result = $this->sendRequest('api/mi/liquidaciones');
 
         return (array) isset($result->datos) ? $result->datos : null;
+    }
+
+    /**
+     * Get payout.
+     *
+     * @param int $payout_id The payout id.
+     *
+     * @return null|\stdClass An object containing the payout information.
+     */
+    public function get(int $payout_id) : ?stdClass
+    {
+        // Get all company payouts
+        $payouts = $this->getAll();
+
+        // Search the required payout
+        foreach ($payouts as $payout) {
+            if ($payout->id == $payout_id) {
+                return $payout;
+            }
+        }
+
+        return null;
     }
 }

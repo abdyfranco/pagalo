@@ -39,8 +39,8 @@ class Pagalo
     /**
      * Pagalo constructor.
      *
-     * @param string      $username The Pagalo username.
-     * @param string      $password The Pagalo password.
+     * @param string      $username    The Pagalo username.
+     * @param string      $password    The Pagalo password.
      * @param string|null $session_dir The session directory.
      *
      * @throws \Pagalo\Error\Authentication
@@ -69,10 +69,10 @@ class Pagalo
      * Makes a request to the API.
      *
      * @param string $function The function of the API to be called.
-     * @param array  $params An array with the parameters that will be passed to the function called.
-     * @param string $method The HTTP method to be used for the request.
-     * @param array  $headers The headers to be sent in the HTTP request.
-     * @param bool   $raw True to return the RAW response, false to return the parsed response.
+     * @param array  $params   An array with the parameters that will be passed to the function called.
+     * @param string $method   The HTTP method to be used for the request.
+     * @param array  $headers  The headers to be sent in the HTTP request.
+     * @param bool   $raw      True to return the RAW response, false to return the parsed response.
      *
      * @return mixed An object containing the response of the API request or the RAW response.
      */

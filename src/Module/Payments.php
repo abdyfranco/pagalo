@@ -141,10 +141,10 @@ class Payments extends \Pagalo\Pagalo
     /**
      * Make a payment request.
      *
-     * @param int    $client_id The client ID.
+     * @param int    $client_id   The client ID.
      * @param string $description The description of the payment request.
-     * @param float  $amount The amount of the payment request.
-     * @param string $currency The currency of the payment request (USD or GTQ).
+     * @param float  $amount      The amount of the payment request.
+     * @param string $currency    The currency of the payment request (USD or GTQ).
      *
      * @return null|\stdClass An object containing the payment request.
      * @throws \Pagalo\Error\Authentication
@@ -212,11 +212,11 @@ class Payments extends \Pagalo\Pagalo
     /**
      * Charge a credit card.
      *
-     * @param int                 $client_id The client ID.
-     * @param \Pagalo\Object\Card $card The Card object to charge.
+     * @param int                 $client_id   The client ID.
+     * @param \Pagalo\Object\Card $card        The Card object to charge.
      * @param string              $description The description of the payment request.
-     * @param float               $amount The amount of the payment request.
-     * @param string              $currency The currency of the payment request (USD or GTQ).
+     * @param float               $amount      The amount of the payment request.
+     * @param string              $currency    The currency of the payment request (USD or GTQ).
      *
      * @return null|\stdClass An object containing the payment request.
      * @throws \Pagalo\Error\Authentication

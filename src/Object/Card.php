@@ -61,7 +61,7 @@ class Card
      *
      * @return array An array containing all the card information.
      */
-    public function getCardArray(): array
+    public function getCardArray() : array
     {
         return [
             'accountNumber'   => $this->card_number,
@@ -77,7 +77,7 @@ class Card
      *
      * @return string The card number.
      */
-    public function getCardNumber(): string
+    public function getCardNumber() : string
     {
         return $this->card_number;
     }
@@ -87,7 +87,7 @@ class Card
      *
      * @return string
      */
-    public function getCardName(): string
+    public function getCardName() : string
     {
         return $this->card_name;
     }
@@ -97,7 +97,7 @@ class Card
      *
      * @return array The expiration date.
      */
-    public function getExpirationDate(): array
+    public function getExpirationDate() : array
     {
         return $this->expiration_date;
     }
@@ -107,7 +107,7 @@ class Card
      *
      * @return string The CVV number.
      */
-    public function getCvv(): string
+    public function getCvv() : string
     {
         return $this->cvv_number;
     }
@@ -119,7 +119,7 @@ class Card
      *
      * @return bool True if the card it's valid, false otherwise.
      */
-    public function luhn($number): bool
+    public function luhn($number) : bool
     {
         // Force the value to be a string as this method uses string functions
         $number = (string) $number;

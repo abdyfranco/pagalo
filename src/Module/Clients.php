@@ -57,17 +57,18 @@ class Clients extends \Pagalo\Pagalo
      * Create a new client.
      *
      * @param array $client An array containing the following parameters:
-     *   - @option string "nombre"     The client's first name.
-     *   - @option string "apellido"   The client's last name.
-     *   - @option string "email"      The client's email address.
-     *   - @option string "telefono"   The client's phone number.
-     *   - @option string "direccion"  The client's address.
-     *   - @option string "pais"       The ISO 3166-1 Alpha 2 code of client's country.
-     *   - @option string "state"      The ISO 3166-2 Alpha 2 code of client's state (only US and Canada), or the full
-     *     name for the rest of the world.
-     *   - @option string "postalcode" The client's postal code.
-     *   - @option string "ciudad"     The client's city.
-     *   - @option string "nit"        The client's NIT number (nnly for Guatemala).
+     *
+     * @option string "nombre"     The client's first name.
+     * @option string "apellido"   The client's last name.
+     * @option string "email"      The client's email address.
+     * @option string "telefono"   The client's phone number.
+     * @option string "direccion"  The client's address.
+     * @option string "pais"       The ISO 3166-1 Alpha 2 code of client's country.
+     * @option string "state"      The ISO 3166-2 Alpha 2 code of client's state (only US and Canada), or the full name
+     *         for the rest of the world.
+     * @option string "postalcode" The client's postal code.
+     * @option string "ciudad"     The client's city.
+     * @option string "nit"        The client's NIT number (nnly for Guatemala).
      *
      * @return bool True if the client has been succesfully created.
      */

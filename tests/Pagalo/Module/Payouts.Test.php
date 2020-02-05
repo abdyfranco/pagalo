@@ -83,6 +83,15 @@ $Payouts = new class('username', 'password') extends Payouts
 Assert::type('array', $Payouts->getAll());
 
 /**
+ * Payouts::get() Test
+ *
+ * @assert type Check if the returned response it's an object.
+ * @assert contains Check if the returned object has the expected properties.
+ */
+Assert::type('object', $Payouts->get(4000));
+Assert::contains('Awesome Bank', (array) $Payouts->get(4000));
+
+/**
  * Clear all temporary files
  */
 @rmdir(__DIR__ . '/output');

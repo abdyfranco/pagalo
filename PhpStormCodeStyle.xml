@@ -2,9 +2,9 @@
   <HTMLCodeStyleSettings>
     <option name="HTML_ATTRIBUTE_WRAP" value="0" />
     <option name="HTML_TEXT_WRAP" value="0" />
-    <option name="HTML_ALIGN_ATTRIBUTES" value="false" />
     <option name="HTML_KEEP_LINE_BREAKS" value="false" />
     <option name="HTML_KEEP_LINE_BREAKS_IN_TEXT" value="false" />
+    <option name="HTML_ALIGN_ATTRIBUTES" value="false" />
     <option name="HTML_SPACE_INSIDE_EMPTY_TAG" value="true" />
     <option name="HTML_ELEMENTS_TO_INSERT_NEW_LINE_BEFORE" value="body,div,p,form,h1,h2,h3,a,ul,li" />
     <option name="HTML_DO_NOT_INDENT_CHILDREN_OF" value="" />
@@ -13,6 +13,7 @@
   <PHPCodeStyleSettings>
     <option name="ALIGN_KEY_VALUE_PAIRS" value="true" />
     <option name="ALIGN_PHPDOC_PARAM_NAMES" value="true" />
+    <option name="ALIGN_PHPDOC_COMMENTS" value="true" />
     <option name="ALIGN_ASSIGNMENTS" value="true" />
     <option name="PHPDOC_BLANK_LINE_BEFORE_TAGS" value="true" />
     <option name="PHPDOC_KEEP_BLANK_LINES" value="false" />
