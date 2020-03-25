@@ -68,7 +68,7 @@ class Clients extends \Pagalo\Pagalo
      *         for the rest of the world.
      * @option string "postalcode" The client's postal code.
      * @option string "ciudad"     The client's city.
-     * @option string "nit"        The client's NIT number (nnly for Guatemala).
+     * @option string "nit"        The client's NIT number (only for Guatemala).
      *
      * @return bool True if the client has been succesfully created.
      */
@@ -121,7 +121,7 @@ class Clients extends \Pagalo\Pagalo
 
         // Send request
         $this->sendRequest(
-            'api/mi/clientes/crear/' . $company->id,
+            'api/mi/clientes/crear',
             $params,
             'POST',
             [
@@ -130,10 +130,6 @@ class Clients extends \Pagalo\Pagalo
             true
         );
 
-        // Get recently created client
-        unset($params['identidad_empresa']);
-        unset($params['id_empresa']);
-
         $client = $this->search($params['email']);
         $this->sendRequest(
             'api/mi/clientes/editar/' . $client[0]->id,
@@ -141,8 +137,7 @@ class Clients extends \Pagalo\Pagalo
             'PUT',
             [
                 'Content-Type: application/json;charset=UTF-8'
-            ],
-            true
+            ]
         );
 
         return !empty($client);
