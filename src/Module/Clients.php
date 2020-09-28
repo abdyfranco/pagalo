@@ -164,6 +164,6 @@ class Clients extends \Pagalo\Pagalo
             ]
         );
 
-        return (array) isset($result->datos) ? $result->datos : null;
+        return (isset($result->datos) && !is_scalar($result->datos)) ? (array) $result->datos : null;
     }
 }
